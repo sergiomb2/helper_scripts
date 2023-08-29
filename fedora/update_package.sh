@@ -19,14 +19,14 @@ version=$1
 if [ -z "$1" ]
 then
     echo "no version set"
-    exit;
+    exit
 fi
 
 if [ -z "$2" ]
 then
-      stage=0
+    stage=0
 else
-      stage=$2
+    stage=$2
 fi
 
 if (($stage > 10)); then
@@ -59,6 +59,7 @@ then
 echo STAGE 0
 git checkout rawhide
 git pull
+echo rpmdev-bumpspec -n $version -c "${bugs_str}" $package.spec
 rpmdev-bumpspec -n $version -c "${bugs_str}" $package.spec
 fi
 
@@ -68,9 +69,9 @@ echo STAGE 1
 spectool -g $package.spec
 echo "fedpkg copr-build sergiomb/vboxfor23 or sergiomb/builds_for_Stable_Releases"
 echo Press enter scratch-build or n to skip; read dummy;
-if [[ "$dummy" != "n" ]]; then
-fedpkg scratch-build --srpm --fail-fast
-fi
+    if [[ "$dummy" != "n" ]]; then
+        fedpkg scratch-build --srpm --fail-fast
+    fi
 fi
 
 if test $stage -le 2
@@ -78,8 +79,8 @@ then
 echo STAGE 2
 echo Press enter to upload sources and commit or n to skip; read dummy;
 if [[ "$dummy" != "n" ]]; then
-    #fedpkg new-sources $(spectool -l --sources $package.spec --define "_sourcedir ." | grep / | sed 's/.*\///')
-    fedpkg new-sources $(spectool -l --sources $package.spec --define "_sourcedir ." | sed 's/.*: //;s/.*\///')
+    fedpkg new-sources $(spectool -l --sources $package.spec --define "_sourcedir ." | grep / | sed 's/.*\///')
+    #fedpkg new-sources $(spectool -l --sources $package.spec --define "_sourcedir ." | sed 's/.*: //;s/.*\///')
     fedpkg ci -c || git commit -m "${bugs_str}"
     git show
 fi
@@ -144,9 +145,10 @@ echo Press enter to run bodhi on $packagever or n to skip; read dummy;
 if [[ "$dummy" != "n" ]]; then
 #echo "/usr/bin/bodhi updates new --autokarma --autotime --type $bugtype --severity medium --notes-file clog $bugs_bodhi --close-bugs --request testing $packagever" | sh
 git checkout $repo
+git pull
 fedpkg update --type $bugtype $bugs_bodhi $notes
 git checkout rawhide
 fi
 done
-rm clog
 fi
+

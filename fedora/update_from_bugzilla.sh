@@ -3,7 +3,7 @@ reverse() {
   tac <(echo "$@" | tr ' ' '\n') | tr '\n' ' '
 }
 
-echo "Usage: $0 version stage bug_number_of_bugzilla"
+echo "Usage: $0 bug_id_number_of_bugzilla [stage]"
 echo "stage 0: rpmdev-bumpspec"
 echo "stage 1: scratch-build"
 echo "stage 2: rfpkg new-sources && fedpkg ci -c && git show"
@@ -13,13 +13,15 @@ echo "stage 5: bodhi updates all branches"
 
 echo $(basename $(pwd))
 package=$(basename $(pwd))
-echo "Usage: $0 bug_id [stage]"
+echo "in dir package i.e. $package"
+
+bug_id=$1
 if [ -z "$1" ]
 then
+    echo "no bug_id_neumber set"
     exit
-else
-    bug_id=$1
 fi
+
 if [ -z "$2" ]
 then
     stage=0
@@ -27,7 +29,6 @@ else
     stage=$2
 fi
 
-echo "in dir package i.e. $package"
 if [ ! -f $package.spec ]; then
     echo "File $package.spec not found!"
     exit 1
@@ -56,20 +57,20 @@ then
 echo STAGE 1
 spectool -g $package.spec
 fedpkg new-sources $(spectool -l $package.spec | grep / | sed 's/.*\///') --offline
-echo Press enter scratch-build or n to skip ; read dummy;
+echo Press enter scratch-build or n to skip; read dummy;
     if [[ "$dummy" != "n" ]]; then
-        fedpkg scratch-build --srpm
+        fedpkg scratch-build --srpm --fail-fast
     fi
 fi
 
 if test $stage -le 2
 then
 echo STAGE 2
-echo Press enter to upload sources and commit or n to skip ; read dummy;
-    if [[ "$dummy" != "n" ]]; then
-fedpkg new-sources $(spectool -l $package.spec | grep / | sed 's/.*\///')
-fedpkg ci -c && git show
-    fi
+echo Press enter to upload sources and commit or n to skip; read dummy;
+if [[ "$dummy" != "n" ]]; then
+    fedpkg new-sources $(spectool -l $package.spec | grep / | sed 's/.*\///')
+    fedpkg ci -c && git show
+fi
 fi
 
 if test $stage -le 3
@@ -81,7 +82,18 @@ fedpkg push && fedpkg build --nowait --fail-fast
 fi
 fi
 
-REPOS=$(reverse $(fedpkg releases-info -f))
+# only here we need repos
+echo f to fedora branches or e to epel branches or a to all branches; read dummy;
+if [[ "$dummy" == "f" ]]; then
+REPOS="$(reverse $(fedpkg releases-info -f))"
+else
+if [[ "$dummy" == "e" ]]; then
+REPOS="$(reverse $(fedpkg releases-info -e))"
+else
+REPOS="$(reverse $(fedpkg releases-info -f))$(reverse $(fedpkg releases-info -e)) "
+fi
+fi
+
 if test $stage -le 4
 then
 echo STAGE 4
