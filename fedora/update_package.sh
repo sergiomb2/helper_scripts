@@ -67,7 +67,16 @@ if test $stage -le 1
 then
 echo STAGE 1
 spectool -g $package.spec
-echo "fedpkg copr-build sergiomb/vboxfor23 or sergiomb/builds_for_Stable_Releases"
+echo "check if patches applies"
+fedpkg prep
+if [ $? -ne 0 ];
+then
+    echo "fedpkg prep failed you need to fix it to build the package";
+    exit 1;
+fi
+
+echo "you check build on copr with: fedpkg copr-build sergiomb/vboxfor23 or sergiomb/builds_for_Stable_Releases"
+echo "or you can check build with mock: fedpkg mockbuild -N --default-mock-resultdir --root fedora-38-x86_64"
 echo Press enter scratch-build or n to skip; read dummy;
     if [[ "$dummy" != "n" ]]; then
         fedpkg scratch-build --srpm --fail-fast

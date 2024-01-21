@@ -3,8 +3,8 @@
 #./k3b-extras-freeworld/k3b-extras-freeworld.spec
 #./kwave
 
-rawhide=38
-REPOS="f38 f37 f36 el9 el8 el7"
+rawhide=40
+REPOS="f39 f38 el9 el8 el7"
 #name=$1
 version_kde=22.08.1
 
@@ -45,11 +45,14 @@ fi
 if test $stage -le 1
 then
 echo STAGE 1
-rpmdev-bumpspec -n $version -c "Update $name to $version" $name.spec
-spectool -g $name.spec
-echo "press enter rfpkg mockbuild -N --default-mock-resultdir --root fedora-37-x86_64-rpmfusion_free or n to skip"; read dummy;
+echo "press enter run rpmdev-bumpspec -n $version -c \"Update $name to $version\" $name.spec n to skip"; read dummy;
 if [[ "$dummy" != "n" ]]; then
-rfpkg mockbuild -N --default-mock-resultdir --root fedora-37-x86_64-rpmfusion_free
+rpmdev-bumpspec -n $version -c "Update $name to $version" $name.spec
+fi
+spectool -g $name.spec
+echo "press enter rfpkg mockbuild -N --default-mock-resultdir --root fedora+rpmfusion_free-38-x86_64 or n to skip"; read dummy;
+if [[ "$dummy" != "n" ]]; then
+rfpkg mockbuild -N --default-mock-resultdir --root fedora+rpmfusion_free-38-x86_64
 fi
 echo Press enter scratch-build or n to skip; read dummy;
 if [[ "$dummy" != "n" ]]; then
@@ -72,7 +75,7 @@ fi
 if test $stage -le 3
 then
 echo STAGE 2
-echo Press enter to push and build in rawhide; read dummy;
+echo Press enter to push and build in current branch; read dummy;
 rfpkg push && rfpkg build --fail-fast
 fi
 

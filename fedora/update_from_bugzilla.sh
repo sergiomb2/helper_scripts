@@ -69,6 +69,11 @@ echo STAGE 2
 echo Press enter to upload sources and commit or n to skip; read dummy;
 if [[ "$dummy" != "n" ]]; then
     fedpkg new-sources $(spectool -l $package.spec | grep / | sed 's/.*\///')
+    returncode=$?
+    if test $returncode -ne 0; then
+        echo fedpkg new-sources failed returncode:$returncode
+        exit $returncode
+    fi
     fedpkg ci -c && git show
 fi
 fi
